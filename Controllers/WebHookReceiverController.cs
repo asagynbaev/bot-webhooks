@@ -19,6 +19,12 @@ namespace bot_webhooks.Controllers
             _logger = logger;
         }
 
+        [HttpGet]
+        public string Get()
+        {
+            return "Hello from WebHookListener!";
+        }
+
         [HttpPost]
         public void Post(Position signal)
         {
