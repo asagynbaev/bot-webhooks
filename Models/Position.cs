@@ -7,8 +7,8 @@ namespace bot_webhooks.Models
     public class Position
     {
         public string Symbol { get; set; }
-        public decimal EntryPrice { get; set; }
         public string PositionSide { get; set; }
+        public decimal EntryPrice { get; set; }
 
         internal WebHookContext Db { get; set; }
 
