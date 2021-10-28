@@ -6,8 +6,6 @@ public class Position
         public decimal EntryPrice { get; set; }
         //     Leverage
         public int Leverage { get; set; }
-        //     Unrealized profit
-        public decimal UnrealizedPnL { get; set; }
         //     Position side
         public int PositionSide { get; set; }
         //     Quantity

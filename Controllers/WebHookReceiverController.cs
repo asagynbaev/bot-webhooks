@@ -26,13 +26,17 @@ namespace bot_webhooks.Controllers
         }
 
         [HttpPost]
-        public void Post(Position signal)
+        public Position Post(Position signal)
         {
             Position position = new Position();
 
             position.Symbol = signal.Symbol;
             position.EntryPrice = signal.EntryPrice;
             position.Leverage = 10;
+            position.PositionSide = 1;
+            position.Quantity = 100;
+
+            return position;
         }
     }
 }
