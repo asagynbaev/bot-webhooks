@@ -33,8 +33,8 @@ namespace bot_webhooks.Controllers
         {
             using (var httpClient = new HttpClient())
             {
-                string jsonString = JsonSerializer.Serialize(signal);
-                var res = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={jsonString}").Result;
+                //string jsonString = JsonSerializer.Serialize(signal);
+                var res = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={signal}").Result;
             }
 
             // signal.Db = Db;
