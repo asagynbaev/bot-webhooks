@@ -29,7 +29,7 @@ namespace bot_webhooks.Controllers
         }
 
         [HttpPost]
-        public async void Post([FromBody]Position signal)
+        public void Post([FromBody]Position signal)
         {
             using (var httpClient = new HttpClient())
             {
@@ -37,8 +37,8 @@ namespace bot_webhooks.Controllers
                 var res = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={jsonString}").Result;
             }
 
-            signal.Db = Db;
-            await signal.InsertAsync();
+            //signal.Db = Db;
+            //await signal.InsertAsync();
         }
     }
 }
