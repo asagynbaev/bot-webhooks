@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using MySqlConnector;
 using bot_webhooks.Models;
+using System.Net.Http;
+using System.Net;
 
 namespace bot_webhooks.Controllers
 {
@@ -16,6 +14,7 @@ namespace bot_webhooks.Controllers
         
         private readonly ILogger<WebHookReceiverController> _logger;
         private readonly WebHookContext Db;
+        private readonly string token = "1339387459:AAG8KH3duliEhV6cuQv8WHQVr4EGFnP0tig", channel = "1001336600906";
 
         public WebHookReceiverController(ILogger<WebHookReceiverController> logger, WebHookContext db)
         {
@@ -32,6 +31,15 @@ namespace bot_webhooks.Controllers
         [HttpPost]
         public async Task<Position> Post([FromBody]Position signal)
         {
+            using (var httpClient = new HttpClient())
+            {
+                var res = httpClient.GetAsync($"https://api.telegram.org/bot{token}/sendMessage?chat_id={channel}&text=ololo").Result;
+                if (res.StatusCode == HttpStatusCode.OK)
+                { /* done, go check your channel */ }
+                else
+                { /* something went wrong */ }
+            }
+
             await Db.Connection.OpenAsync();
             signal.Db = Db;
             await signal.InsertAsync();
