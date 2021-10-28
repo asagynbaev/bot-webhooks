@@ -29,12 +29,12 @@ namespace bot_webhooks.Controllers
         }
 
         [HttpPost]
-        public void Post([FromBody]string signal)
+        public void Post([FromBody]Position signal)
         {
             using (var httpClient = new HttpClient())
             {
-                //string jsonString = JsonSerializer.Serialize(signal);
-                var res = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={signal}").Result;
+                string jsonString = JsonSerializer.Serialize(signal);
+                var res = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={jsonString}").Result;
             }
 
             // signal.Db = Db;
