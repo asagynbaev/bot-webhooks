@@ -1,11 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Binance.Net;
+using Binance.Net.Objects;
+using CryptoExchange.Net.Authentication;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace bot_webhooks
 {
@@ -13,6 +10,14 @@ namespace bot_webhooks
     {
         public static void Main(string[] args)
         {
+            BinanceClient.SetDefaultOptions(new BinanceClientOptions()
+            {
+                ApiCredentials = new ApiCredentials(
+                    "cmz4W8IeYpbKx8W4jZZNS3jPE3gCf4mkYh8FH007Y078IsGyplV3XC7mMhAQWUA7", 
+                    "09LGxQZnoEr1N0TIIfPNWJP4YDSCta682hblibY2JAMIwrTxn22UXkNm7OoDQ3NB"
+                ),
+            });
+            
             CreateHostBuilder(args).Build().Run();
         }
 

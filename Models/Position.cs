@@ -7,7 +7,7 @@ namespace bot_webhooks.Models
     public class Position
     {
         public string Symbol { get; set; }
-        public string PositionSide { get; set; }
+        public int PositionSide { get; set; }
         public decimal EntryPrice { get; set; }
 
         internal WebHookContext Db { get; set; }
@@ -40,7 +40,7 @@ namespace bot_webhooks.Models
             cmd.Parameters.Add(new MySqlParameter
             {
                 ParameterName = "@PositionSide",
-                DbType = DbType.String,
+                DbType = DbType.Int32,
                 Value = PositionSide,
             });
             cmd.Parameters.Add(new MySqlParameter
