@@ -1,10 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using bot_webhooks.Models;
-using System.Net.Http;
-using System.Text.Json;
 using Binance.Net;
-using System;
 using Binance.Net.Enums;
 
 namespace bot_webhooks.Controllers
@@ -74,15 +71,7 @@ namespace bot_webhooks.Controllers
                 OrderType.Market, 
                 SymbolAmount == 0 ? null : SymbolAmount, // SymbolAmount
                 USDT == 0 ? null : USDT, // quoteSymbolAmount
-                null, 
-                null, 
-                null, 
-                null, //decimal stopPrice
-                null, 
-                null, 
-                null, 
-                default
-                
+                null, null, null, null, null, null, null, default
             );
 
             // if(!res.Success)
