@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using bot_webhooks.Models;
 using Binance.Net;
 using Binance.Net.Enums;
+using System.Net.Http;
+using System.Text.Json;
 
 namespace bot_webhooks.Controllers
 {
@@ -30,11 +32,11 @@ namespace bot_webhooks.Controllers
         public void Post([FromBody]Position signal)
         {
             OpenPositions(signal);
-            // using (var httpClient = new HttpClient())
-            // {
-            //     string jsonString = JsonSerializer.Serialize(signal);
-            //     var res = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={jsonString}").Result;
-            // }
+            using (var httpClient = new HttpClient())
+            {
+                string jsonString = JsonSerializer.Serialize(signal);
+                var res = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={jsonString}").Result;
+            }
         }
 
         public async void OpenPositions(Position signal)
@@ -62,9 +64,6 @@ namespace bot_webhooks.Controllers
                 }
             }
             
-
-            //decimal price = BinanceHelpers.FloorPrice(token.TickSize, position.EntryPrice);
-            //decimal quantity = (position.Quantity < 0) ? Math.Round(Math.Abs(position.Quantity), Convert.ToInt32(token.QuoteAssetPrecision)) : position.Quantity;
             var res = await client.Spot.Order.PlaceOrderAsync(
                 signal.Symbol, 
                 signal.PositionSide == 0 ? OrderSide.Buy : OrderSide.Sell,
