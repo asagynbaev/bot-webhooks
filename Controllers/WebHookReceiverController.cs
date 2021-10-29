@@ -53,29 +53,35 @@ namespace bot_webhooks.Controllers
                         SymbolAmount = item.Free;
                 }
             }
-            
-            var res = await client.Spot.Order.PlaceOrderAsync(
-                signal.Symbol, 
-                signal.PositionSide == 0 ? OrderSide.Buy : OrderSide.Sell,
-                OrderType.Market, 
-                SymbolAmount == 0 ? null : SymbolAmount, // SymbolAmount
-                USDT == 0 ? null : USDT, // quoteSymbolAmount
-                null, null, null, null, null, null, null, default
-            );
+            if(signal.PositionSide == 1 && SymbolAmount < 1)
+            {
+                // написать логирование для ложных сигналов
+            }
+            else if(signal.PositionSide == 0 && USDT < 1)
+            {
+                // повторная покупка актива, который сработал ложно
+            }
+            else
+            {
+                var res = await client.Spot.Order.PlaceOrderAsync(
+                    signal.Symbol, 
+                    signal.PositionSide == 0 ? OrderSide.Buy : OrderSide.Sell,
+                    OrderType.Market, 
+                    SymbolAmount == 0 ? null : SymbolAmount, // SymbolAmount
+                    USDT == 0 ? null : USDT, // quoteSymbolAmount
+                    null, null, null, null, null, null, null, default
+                );
 
+                // if(!res.Success)
+                //     System.Console.WriteLine(res.Error.Message);
+                // else
+                //     System.Console.WriteLine($"Order has been opened: {message}");
+            }
             using (var httpClient = new HttpClient())
             {
                 string jsonString = JsonSerializer.Serialize(signal);
                 var res2 = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={jsonString}").Result;
             }
-        }
-
-        public async void OpenPositions(Position signal)
-        {
-            // if(!res.Success)
-            //     System.Console.WriteLine(res.Error.Message);
-            // else
-            //     System.Console.WriteLine($"Order has been opened: {message}");
         }
     }
 }
