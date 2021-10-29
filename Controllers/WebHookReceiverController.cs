@@ -29,17 +29,7 @@ namespace bot_webhooks.Controllers
         }
 
         [HttpPost]
-        public void Post([FromBody]Position signal)
-        {
-            OpenPositions(signal);
-            using (var httpClient = new HttpClient())
-            {
-                string jsonString = JsonSerializer.Serialize(signal);
-                var res = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={jsonString}").Result;
-            }
-        }
-
-        public async void OpenPositions(Position signal)
+        public async void Post([FromBody]Position signal)
         {
             decimal USDT = 0;
             decimal SymbolAmount = 0;
@@ -73,6 +63,15 @@ namespace bot_webhooks.Controllers
                 null, null, null, null, null, null, null, default
             );
 
+            using (var httpClient = new HttpClient())
+            {
+                string jsonString = JsonSerializer.Serialize(signal);
+                var res2 = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={jsonString}").Result;
+            }
+        }
+
+        public async void OpenPositions(Position signal)
+        {
             // if(!res.Success)
             //     System.Console.WriteLine(res.Error.Message);
             // else
