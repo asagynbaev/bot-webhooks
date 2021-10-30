@@ -37,12 +37,6 @@ namespace bot_webhooks.Controllers
         [HttpPost]
         public async Task Post([FromBody]Position signal)
         {
-            using (var httpClient = new HttpClient())
-            {
-                string jsonString = JsonSerializer.Serialize(signal);
-                var res3 = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={jsonString} spot position will be opened soon!").Result;
-            }
-
             var query = new Statement(Db);
             // Getting actual statement of position
             // TODO: send log to TG if something went wrong
