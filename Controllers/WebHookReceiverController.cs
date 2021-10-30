@@ -64,11 +64,12 @@ namespace bot_webhooks.Controllers
             }
             else
             {
-                using (var httpClient = new HttpClient())
-                {
-                    string jsonString = JsonSerializer.Serialize(signal);
-                    var res3 = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={signal.Symbol} spot position will be opened soon!").Result;
-                }
+                // TODO: Update if else statement
+                // using (var httpClient = new HttpClient())
+                // {
+                //     string jsonString = JsonSerializer.Serialize(signal);
+                //     var res3 = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={signal.Symbol} spot position will be opened soon!").Result;
+                // }
             }
         }
 
