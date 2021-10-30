@@ -10,6 +10,7 @@ namespace bot_webhooks
     {
         public static void Main(string[] args)
         {
+            //FIXME: Make this credentials personal for each user
             BinanceClient.SetDefaultOptions(new BinanceClientOptions()
             {
                 ApiCredentials = new ApiCredentials(

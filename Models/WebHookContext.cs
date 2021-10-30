@@ -1,17 +1,13 @@
-using System;
-using MySqlConnector;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace bot_webhooks.Models
 {
-    public class WebHookContext : IDisposable
+    public class WebHookContext : DbContext
     {
-        public MySqlConnection Connection { get; }
-
-        public WebHookContext(string connectionString)
-        {
-            Connection = new MySqlConnection(connectionString);
-        }
-
-        public void Dispose() => Connection.Dispose();
+        public DbSet<Statement> Statements { get; set; }    
+        public WebHookContext(DbContextOptions<WebHookContext> options) : base(options)  
+        {   
+        }  
     }
 }
