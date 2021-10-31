@@ -35,7 +35,15 @@ namespace bot_webhooks.Models
 
         public async Task<Statement> GetDataFromDBAsync(string symbol)
         {
-            return await Db.Statements.Where(x => x.Symbol == symbol).FirstOrDefaultAsync();
+            try
+            {
+                 return await Db.Statements.Where(x => x.Symbol == symbol).FirstOrDefaultAsync();  
+            }
+            catch (System.Exception)
+            {
+                // TODO: log this error
+                throw new System.Exception();
+            }
         }
 
         public async Task<bool> UpdateDB(string symbol)
