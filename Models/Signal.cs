@@ -7,39 +7,36 @@ using Microsoft.EntityFrameworkCore;
 namespace bot_webhooks.Models
 {
     [Table("pairs")]
-    public class Statement
+    public class Signal
     {
         internal WebHookContext Db { get; set; }
 
-        public Statement()
+        public Signal()
         {
         }
-        internal Statement(WebHookContext db)
+        internal Signal(WebHookContext db)
         {
             Db = db;
         }
         
         [Column("ID")]
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int ID { get; set; }
-        public string Symbol { get; set; }
-        public int BuySignalLevel1 { get; set; }
-        public int BuySignalLevel2 { get; set; }
-        public int BuySignalLevel3 { get; set; }
-        public int SellSignalLevel1 { get; set; }
-        public int SellSignalLevel2 { get; set; }
-        public int SellSignalLevel3 { get; set; }
-        public int Long { get; set; }
-        public int Short { get; set; }
+        public int ID { get; protected set; }
+        public string Symbol { get; private set; }
+        public int BuySignalLevel1 { get; private set; }
+        public int BuySignalLevel2 { get; private set; }
+        public int BuySignalLevel3 { get; private set; }
+        public int SellSignalLevel1 { get; private set; }
+        public int SellSignalLevel2 { get; private set; }
+        public int SellSignalLevel3 { get; private set; }
 
-        public async Task<Statement> GetDataFromDBAsync(string symbol)
+        public async Task<Signal> GetDataFromDBAsync(string symbol)
         {
             try
             {
-                 return await Db.Statements.Where(x => x.Symbol == symbol).FirstOrDefaultAsync();  
+                 return await Db.Signals.Where(x => x.Symbol == symbol).FirstOrDefaultAsync();  
             }
-            catch (System.Exception)
+            catch (System.Exception ex)
             {
                 // TODO: log this error
                 throw new System.Exception();
@@ -50,7 +47,7 @@ namespace bot_webhooks.Models
         {
             try
             {
-                Statement statement =  await Db.Statements.Where(x => x.Symbol == symbol).FirstOrDefaultAsync();
+                Signal statement = await Db.Signals.Where(x => x.Symbol == symbol).FirstOrDefaultAsync();
                 // FIXME: Use only one variable to measure level of signal
                 statement.BuySignalLevel1 = 0;
                 statement.BuySignalLevel2 = 0;
@@ -63,7 +60,7 @@ namespace bot_webhooks.Models
                 return true;
 
             }
-            catch (System.Exception)
+            catch (System.Exception ex)
             {
                 // TODO: Add to log
                 return false;
@@ -74,7 +71,7 @@ namespace bot_webhooks.Models
         {
             try
             {
-                 Statement statement =  await Db.Statements.Where(x => x.Symbol == symbol).FirstOrDefaultAsync();
+                 Signal statement = await Db.Signals.Where(x => x.Symbol == symbol).FirstOrDefaultAsync();
 
                 switch (signal)
                 {
@@ -102,7 +99,7 @@ namespace bot_webhooks.Models
                 return true;
 
             }
-            catch (System.Exception)
+            catch (System.Exception ex)
             {
                 // TODO: Add to log
                 return false;

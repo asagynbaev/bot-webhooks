@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Binance.Net.Enums;
+using System;
+using CryptoExchange.Net.Authentication;
 
 namespace bot_webhooks.Controllers
 {
@@ -15,9 +17,12 @@ namespace bot_webhooks.Controllers
     [Route("[controller]")]
     public class WebHookReceiverController : ControllerBase
     {
-        private readonly ILogger<WebHookReceiverController> _logger;
+        private readonly ILogger<WebHookReceiverController> _logger; // TODO: use this amazing feature
         private readonly WebHookContext Db;
-        private readonly string token = "bot1339387459:AAG8KH3duliEhV6cuQv8WHQVr4EGFnP0tig", channel = "-1001336600906";
+
+        // TODO: Implement class for Telegram messaging
+        private readonly string token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_ID");
+        private readonly string channel = Environment.GetEnvironmentVariable("TELEGRAM_CHANNEL_ID");
 
         public WebHookReceiverController(ILogger<WebHookReceiverController> logger, WebHookContext db)
         {
@@ -28,18 +33,20 @@ namespace bot_webhooks.Controllers
         [HttpGet]
         public async Task<string> Get(string symbol)
         {
-            var res = await Db.Statements.Where(x => x.Symbol == symbol).ToListAsync();
+            // TODO: Make this message more informative
+            var res = await Db.Signals.Where(x => x.Symbol == symbol).ToListAsync();
             int _buySignalLevel = res[0].BuySignalLevel1 + res[0].BuySignalLevel2 + res[0].BuySignalLevel3;
             int _sellSignalLevel = res[0].SellSignalLevel1 + res[0].SellSignalLevel2 + res[0].SellSignalLevel3;
             return $"Buy level is {_buySignalLevel.ToString()} and sell level is {_sellSignalLevel.ToString()}";
         }
 
         [HttpPost]
-        public async Task Post([FromBody]Position signal)
+        public async Task Post([FromBody]Position signal) // FIXME: Don't forget to rename POsition to Signal
         {
-            var query = new Statement(Db);
-            // Getting actual statement of position
-            // TODO: send log to TG if something went wrong
+            // TODO: After implementing Futures, replace this method
+            //bool futuresIsOpen = await OpenFuturesPosition(signal);
+
+            var query = new Signal(Db);
             var statement = await query.GetDataFromDBAsync(signal.Symbol);
             // Changing level of current statement
             // TODO: send log to TG if something went wrong
@@ -55,21 +62,12 @@ namespace bot_webhooks.Controllers
                 // TODO: send log to TG if something went wrong
             } 
             // FIXME: Use only one variable to measure level of signal
-            else if(statement.SellSignalLevel1 == 1 && statement.SellSignalLevel2 == 1 && statement.SellSignalLevel3 == 1)
+            if(statement.SellSignalLevel1 == 1 && statement.SellSignalLevel2 == 1 && statement.SellSignalLevel3 == 1)
             {
                 bool positionIsOpen = await OpenSpotPosition(signal);
                 if(positionIsOpen)
                     await query.UpdateDB(signal.Symbol);
                 // TODO: send log to TG if something went wrong
-            }
-            else
-            {
-                // TODO: Update if else statement
-                // using (var httpClient = new HttpClient())
-                // {
-                //     string jsonString = JsonSerializer.Serialize(signal);
-                //     var res3 = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={signal.Symbol} spot position will be opened soon!").Result;
-                // }
             }
         }
 
@@ -85,6 +83,13 @@ namespace bot_webhooks.Controllers
             else
                 symbolAmount =  await GetBalanceOrSymbolAmount(signal.Symbol, signal.PositionSide);
             
+            BinanceClient.SetDefaultOptions(new Binance.Net.Objects.BinanceClientOptions()
+            {
+                ApiCredentials = new ApiCredentials(
+                    "cmz4W8IeYpbKx8W4jZZNS3jPE3gCf4mkYh8FH007Y078IsGyplV3XC7mMhAQWUA7", 
+                    "09LGxQZnoEr1N0TIIfPNWJP4YDSCta682hblibY2JAMIwrTxn22UXkNm7OoDQ3NB"
+                )
+            });
             using (var client = new BinanceClient())
             {
                  var result = await client.Spot.Order.PlaceOrderAsync(
@@ -114,35 +119,56 @@ namespace bot_webhooks.Controllers
         #endregion
 
         #region USDT-M Futures
-        public async void OpenFuturesPosition(Position signal)
+        public async Task<bool> OpenFuturesPosition(Position signal)
         {
+            // TODO: Implement method to check open positions
+            // CheckOpenPosition();
+
+            // TODO: Implement method to close position
+            // ClosePosition();
+
             // TODO: finish USDT-M positions functionality
-            decimal FuturesBalance = 0;
+            decimal futuresBalance = 0;
             using (var client = new BinanceClient())
             {
-                var futuresRes = await client.FuturesUsdt.Account.GetBalanceAsync();
-                var quantity = ((double) FuturesBalance / 100)* 10;
-                var SymbolPrice = await client.Spot.Market.GetPriceAsync(signal.Symbol);
+                var getFuturesBalance = await client.FuturesUsdt.Account.GetBalanceAsync();
+                foreach (var item in getFuturesBalance.Data)
+                {
+                    if(item.Asset == "USDT")
+                        //TODO: Need to think about amount for trade, now it's getting half of deposit
+                        futuresBalance = item.AvailableBalance / 2;
+                }
+                var getSymbolPrice = await client.Spot.Market.GetPriceAsync(signal.Symbol);
+                var symbolPrice = getSymbolPrice.Data.Price;
+                // TODO: 10X leverage used, should be flexible
+                var quantity = (futuresBalance / symbolPrice) * 10;
+                
+                // FIXME: Need to get symbol precission from binance exchache (0.001m)
+                quantity = Math.Round(Math.Abs(quantity), Convert.ToInt32(0.001m));
 
                 var result = await client.FuturesUsdt.Order.PlaceOrderAsync(
                     signal.Symbol, 
                     signal.PositionSide == 0 ? OrderSide.Buy : OrderSide.Sell, 
                     OrderType.Market, 
-                    1000, //decimal? quantity, 
+                    quantity, //decimal? quantity, 
                     signal.PositionSide == 0 ? PositionSide.Long : PositionSide.Short, 
-                    TimeInForce.GoodTillCancel,
+                    null,
                     null, null, null, null, null, null,null, null, null, null, null, default
                 );
 
                 if(!result.Success)
+                {
                     System.Console.WriteLine(result.Error.Message); // TODO: log error message
+                    return false;
+                }
                 else
                 {
                     using (var httpClient = new HttpClient())
                     {
                         string jsonString = JsonSerializer.Serialize(signal);
-                        var res3 = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={signal.Symbol} spot position has been opened!").Result;
+                        var res3 = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={signal.Symbol} USDT-M Futures position has been opened!").Result;
                     }
+                    return true;
                 } 
             }
         }
