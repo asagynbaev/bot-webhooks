@@ -3,19 +3,22 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace bot_webhooks.Models
 {
     [Table("pairs")]
     public class Signal
     {
+        private readonly ILogger<Signal> _logger;
         internal WebHookContext Db { get; set; }
 
         public Signal()
         {
         }
-        internal Signal(WebHookContext db)
+        internal Signal(WebHookContext db, ILogger<Signal> logger)
         {
+            _logger = logger;
             Db = db;
         }
         
@@ -38,8 +41,9 @@ namespace bot_webhooks.Models
             }
             catch (System.Exception ex)
             {
-                // TODO: log this error
-                throw new System.Exception();
+                TelegramMessenger.SendMessage($"Error: {ex.Message}");
+                _logger.LogError(ex.Message);
+                return null;
             }
         }
 
@@ -62,7 +66,8 @@ namespace bot_webhooks.Models
             }
             catch (System.Exception ex)
             {
-                // TODO: Add to log
+                _logger.LogError(ex.Message);
+                TelegramMessenger.SendMessage($"Error: {ex.Message}");
                 return false;
             }
         }
@@ -71,7 +76,7 @@ namespace bot_webhooks.Models
         {
             try
             {
-                 Signal statement = await Db.Signals.Where(x => x.Symbol == symbol).FirstOrDefaultAsync();
+                Signal statement = await Db.Signals.Where(x => x.Symbol == symbol).FirstOrDefaultAsync();
 
                 switch (signal)
                 {
@@ -101,7 +106,8 @@ namespace bot_webhooks.Models
             }
             catch (System.Exception ex)
             {
-                // TODO: Add to log
+                _logger.LogError(ex.Message);
+                TelegramMessenger.SendMessage($"Error: {ex.Message}");
                 return false;
             }
         }
