@@ -30,46 +30,61 @@ namespace bot_webhooks.Models
             // FIXME: if user is active, and Spot only
             var allUsers = await users.GetAllusers();
 
-            foreach (var item in allUsers)
+            try
             {
-                decimal balance = 0;
-                decimal symbolAmount = 0;
-
-                BinanceClient.SetDefaultOptions(new Binance.Net.Objects.BinanceClientOptions()
+                 foreach (var item in allUsers)
                 {
-                    ApiCredentials = new ApiCredentials(item.ApiKey, item.Secret)
-                });
+                    decimal balance = 0;
+                    decimal symbolAmount = 0;
 
-                if(signal.Direction == 0)
-                    balance = await GetBalanceOrSymbolAmount(signal.Symbol, signal.Direction);
-                else
-                    symbolAmount =  await GetBalanceOrSymbolAmount(signal.Symbol, signal.Direction);
-                
-                using (var client = new BinanceClient())
-                {
-                    var result = await client.Spot.Order.PlaceOrderAsync(
-                        signal.Symbol, 
-                        signal.Direction == 0 ? OrderSide.Buy : OrderSide.Sell,
-                        OrderType.Market, 
-                        symbolAmount == 0 ? null : symbolAmount, // SymbolAmount
-                        balance == 0 ? null : balance, // quoteSymbolAmount
-                        null, null, null, null, null, null, null, default // Unnecessary parameters
-                    );
+                    BinanceClient.SetDefaultOptions(new Binance.Net.Objects.BinanceClientOptions()
+                    {
+                        ApiCredentials = new ApiCredentials(item.ApiKey, item.Secret)
+                    });
 
-                    if(result.Success)
-                        taskResult = true;
+                    if(signal.Direction == 0)
+                    {
+                        balance = await GetBalanceOrSymbolAmount(signal.Symbol, signal.Direction, item.ApiKey, item.Secret);
+                        if(balance == 0)
+                            TelegramMessenger.SendMessage($"False alarm: {signal.Symbol} already bought");
+                    }
                     else
                     {
-                        // TODO: log error message
-                        TelegramMessenger.SendMessage($"Error: {result.Error.Message}");
-                        taskResult = false;
+                        symbolAmount =  await GetBalanceOrSymbolAmount(signal.Symbol, signal.Direction, item.ApiKey, item.Secret);
+                            if(symbolAmount == 0)
+                                TelegramMessenger.SendMessage($"False alarm: {signal.Symbol} already sold");
+                    }
+
+                    using (var client = new BinanceClient())
+                    {
+                        var result = await client.Spot.Order.PlaceOrderAsync(
+                            signal.Symbol, 
+                            signal.Direction == 0 ? OrderSide.Buy : OrderSide.Sell,
+                            OrderType.Market, 
+                            symbolAmount == 0 ? null : symbolAmount, // SymbolAmount
+                            balance == 0 ? null : balance, // quoteSymbolAmount
+                            null, null, null, null, null, null, null, default // Unnecessary parameters
+                        );
+
+                        if(result.Success)
+                            taskResult = true;
+                        else
+                        {
+                            // TODO: log error message
+                            TelegramMessenger.SendMessage($"Error: {result.Error.Message}");
+                            taskResult = false;
+                        }
                     }
                 }
-            }
 
-            // FIXME: Modify logic, because for some users we can get error message
-            return taskResult;
-            
+                // FIXME: Modify logic, because for some users we can get error message
+                return taskResult;
+            }
+            catch (System.Exception ex)
+            {
+                TelegramMessenger.SendMessage($"Error: {ex.Message}");
+                return false;
+            }
         }
         #endregion
 
@@ -131,10 +146,15 @@ namespace bot_webhooks.Models
         #endregion
 
         #region Helper
-        private async Task<decimal> GetBalanceOrSymbolAmount(string symbol, int positionSide)
+        private async Task<decimal> GetBalanceOrSymbolAmount(string symbol, int positionSide, string apiKey, string secret)
         {
             string[] collection = symbol.Split('U');
             decimal result = 0;
+
+            BinanceClient.SetDefaultOptions(new Binance.Net.Objects.BinanceClientOptions()
+                {
+                    ApiCredentials = new ApiCredentials(apiKey, secret)
+                });
 
             // FIXME: Decrease time to get balance information
             using(var client = new BinanceClient())
