@@ -45,13 +45,13 @@ namespace bot_webhooks.Models
                     if(signal.Direction == 0)
                     {
                         balance = await GetBalanceOrSymbolAmount(signal.Symbol, signal.Direction, item.ApiKey, item.Secret);
-                        if(balance == 0)
+                        if(balance < 1)
                             TelegramMessenger.SendMessage($"False alarm: {signal.Symbol} already bought");
                     }
                     else
                     {
                         symbolAmount =  await GetBalanceOrSymbolAmount(signal.Symbol, signal.Direction, item.ApiKey, item.Secret);
-                            if(symbolAmount == 0)
+                            if(symbolAmount < 1)
                                 TelegramMessenger.SendMessage($"False alarm: {signal.Symbol} already sold");
                     }
 
