@@ -27,6 +27,7 @@ namespace bot_webhooks.Models
         {
             bool taskResult = false;
             User users = new User(Db);
+            // FIXME: if user is active, and Spot only
             var allUsers = await users.GetAllusers();
 
             foreach (var item in allUsers)
@@ -75,6 +76,10 @@ namespace bot_webhooks.Models
         #region USDT-M Futures
         public async Task<bool> OpenFuturesPosition(Position signal)
         {
+            User users = new User(Db);
+            // FIXME: if user active, and Futures only
+            var allUsers = await users.GetAllusers();
+
             // TODO: Implement method to check open positions
             // CheckOpenPosition();
 
@@ -82,6 +87,8 @@ namespace bot_webhooks.Models
             // ClosePosition();
 
             // TODO: finish USDT-M positions functionality
+
+            // TODO: foreach(var item in allUsers)
             decimal futuresBalance = 0;
             using (var client = new BinanceClient())
             {
