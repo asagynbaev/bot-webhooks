@@ -33,7 +33,7 @@ namespace bot_webhooks.Controllers
         }
 
         [HttpPost]
-        public async Task Post([FromBody]Position signal) // FIXME: Don't forget to rename POsition to Signal
+        public async Task Post([FromBody]Position signal)
         {
             var position = new Position(Db);
             // TODO: After implementing Futures, replace this method

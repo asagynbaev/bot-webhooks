@@ -11,17 +11,7 @@ namespace bot_webhooks
         public static void Main(string[] args)
         {
             // Load env variables
-            DotNetEnv.Env.Load();
-            
-            //FIXME: Make this credentials personal for each user
-            BinanceClient.SetDefaultOptions(new BinanceClientOptions()
-            {
-                ApiCredentials = new ApiCredentials(
-                    "cmz4W8IeYpbKx8W4jZZNS3jPE3gCf4mkYh8FH007Y078IsGyplV3XC7mMhAQWUA7", 
-                    "09LGxQZnoEr1N0TIIfPNWJP4YDSCta682hblibY2JAMIwrTxn22UXkNm7OoDQ3NB"
-                ),
-            });
-            
+            DotNetEnv.Env.Load();            
             CreateHostBuilder(args).Build().Run();
         }
 
