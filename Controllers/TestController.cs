@@ -5,6 +5,12 @@ using System.Text.Json;
 
 namespace bot_webhooks.Controllers
 {
+    public class TestSignal
+    {
+        public string Symbol {get;set;}
+        public string Direction {get;set;}
+        public decimal Price {get;set;}
+    }
     [ApiController]
     [Route("[controller]")]
     public class TestController : ControllerBase
@@ -22,12 +28,13 @@ namespace bot_webhooks.Controllers
         }
 
         [HttpPost]
-        public void Post([FromBody]string signal)
+        public void Post([FromBody]TestSignal signal)
         {
+            //string asdf = signal.ToString();
             using (var httpClient = new HttpClient())
             {
-                //string jsonString = JsonSerializer.Serialize(signal);
-                var res3 = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={signal} text received from tradingview").Result;
+                string jsonString = JsonSerializer.Serialize(signal);
+                var res3 = httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={jsonString}").Result;
             }
         }
     }
