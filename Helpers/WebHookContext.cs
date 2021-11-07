@@ -1,7 +1,8 @@
+using bot_webhooks.Models;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace bot_webhooks.Models
+namespace bot_webhooks.Helpers
 {
     public class WebHookContext : DbContext
     {

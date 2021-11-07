@@ -1,7 +1,7 @@
 using System;
 using System.Net.Http;
 
-namespace bot_webhooks.Models
+namespace bot_webhooks.Helpers
 {
     public static class TelegramMessenger
     {

@@ -22,7 +22,7 @@ namespace bot_webhooks.Controllers
         }
 
         [HttpPost]
-        public void Post([FromBody]Position signal)
+        public void Post([FromBody]Spot signal)
         {
             using (var httpClient = new HttpClient())
             {
