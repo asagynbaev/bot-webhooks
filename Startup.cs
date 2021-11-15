@@ -1,6 +1,4 @@
 using System;
-using bot_webhooks.Helpers;
-using bot_webhooks.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +6,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using bot_webhooks.Data;
+using bot_webhooks.Models;
+using bot_webhooks.Services;
 
 namespace bot_webhooks
 {
@@ -24,6 +25,9 @@ namespace bot_webhooks
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<WebHookContext>(o => o.UseMySQL(Environment.GetEnvironmentVariable("DB_CONNECTION")));
+            services.AddScoped<IUserRepo, UserService>();
+            services.AddScoped<ISignalRepo, SignalService>();
+            services.AddScoped<ITradeRepo, TradeService>();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {

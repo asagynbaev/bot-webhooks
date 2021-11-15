@@ -1,33 +1,32 @@
-using System;
-using System.Threading.Tasks;
 using Binance.Net;
 using Binance.Net.Enums;
+using bot_webhooks.Data;
 using bot_webhooks.Helpers;
 using CryptoExchange.Net.Authentication;
+using Microsoft.EntityFrameworkCore;
+using bot_webhooks.Models;
 
-namespace bot_webhooks.Models
+namespace bot_webhooks.Services
 {
-    class Futures : Position
+    class Futures
     {
-        internal WebHookContext Db { get; set; }
+        private readonly WebHookContext _db;
         public Futures()
         {
         }
 
         public Futures(WebHookContext db)
         {
-            Db = db;
+            _db = db;
         }
         
         private decimal Balance { get; set; }
         private decimal TokensAmount { get; set; }
         
-        public override async Task<bool> OpenPosition(Signal signal)
+        public async void OpenPosition(Signal signal)
         {
-            throw new NotImplementedException();
-            User users = new User(Db);
             // FIXME: if user active, and Futures only
-            var allUsers = await users.GetAllusers();
+            var allUsers = await _db.Users.ToListAsync();
 
             // TODO: Implement method to check open positions
             // CheckOpenPosition();
@@ -79,7 +78,7 @@ namespace bot_webhooks.Models
             // }
         }
 
-        public override async Task<bool> ClosePosition(Signal signal)
+        public async void ClosePosition(Signal signal)
         {
             using (var client = new BinanceClient())
             {
@@ -91,58 +90,6 @@ namespace bot_webhooks.Models
                     Balance == 0 ? null : Balance, // quoteSymbolAmount
                     null, null, null, null, null, null, null, default // Unnecessary parameters
                 );
-            }
-            return false;
-        }
-
-        public async override void GetBalance(string apiKey, string secret)
-        {
-            BinanceClient.SetDefaultOptions(new Binance.Net.Objects.BinanceClientOptions()
-            {
-                ApiCredentials = new ApiCredentials(apiKey, secret)
-            });
-
-            using(var client = new BinanceClient())
-            {
-                var data = await client.General.GetAccountInfoAsync();
-                if(!data)
-                {
-                    // TODO: lor error message
-                    TelegramMessenger.SendMessage($"Error: {data.Error.Message}");
-                }
-
-                foreach (var item in data.Data.Balances)
-                {
-                    if(item.Asset == "USDT")
-                        Balance = item.Free;
-                }
-            }
-        }
-
-        public async override void GetCurrentPosition(string symbol, string apiKey, string secret)
-        {
-            string[] collection = symbol.Split('U');
-
-            BinanceClient.SetDefaultOptions(new Binance.Net.Objects.BinanceClientOptions()
-            {
-                ApiCredentials = new ApiCredentials(apiKey, secret)
-            });
-
-            // FIXME: Decrease time to get balance information
-            using(var client = new BinanceClient())
-            {
-                var data = await client.General.GetAccountInfoAsync();
-                if(!data)
-                {
-                    // TODO: lor error message
-                    TelegramMessenger.SendMessage($"Error: {data.Error.Message}");
-                }
-
-                foreach (var item in data.Data.Balances)
-                {
-                    if(item.Asset == collection[0])
-                        TokensAmount = item.Free;
-                }
             }
         }
     }

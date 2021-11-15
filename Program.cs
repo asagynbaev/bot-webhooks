@@ -1,5 +1,5 @@
+using System;
 using Binance.Net;
-using Binance.Net.Objects;
 using CryptoExchange.Net.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -11,7 +11,14 @@ namespace bot_webhooks
         public static void Main(string[] args)
         {
             // Load env variables
-            DotNetEnv.Env.Load();            
+            DotNetEnv.Env.Load();
+            BinanceClient.SetDefaultOptions(new Binance.Net.Objects.BinanceClientOptions()
+            {
+                ApiCredentials = new ApiCredentials(
+                    Environment.GetEnvironmentVariable("API_KEY"), 
+                    Environment.GetEnvironmentVariable("API_SECRET")
+                )
+            });          
             CreateHostBuilder(args).Build().Run();
         }
 

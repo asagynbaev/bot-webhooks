@@ -1,10 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using bot_webhooks.Models;
-using System.Threading.Tasks;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using bot_webhooks.Helpers;
+using bot_webhooks.Data;
 
 namespace bot_webhooks.Controllers
 {
@@ -12,56 +8,36 @@ namespace bot_webhooks.Controllers
     [Route("[controller]")]
     public class WebHookReceiverController : ControllerBase
     {
-        private readonly ILogger<WebHookReceiverController> _logger;
-        private readonly WebHookContext Db;
+        ISignalRepo _signal;
+        ITradeRepo _trade;
 
-        public WebHookReceiverController(ILogger<WebHookReceiverController> logger, WebHookContext db)
-        {
-            _logger = logger;
-            Db = db;
-        }
+        public WebHookReceiverController(ISignalRepo signalDb, ITradeRepo trade) => (_signal, _trade) = (signalDb, trade);
 
         [HttpGet]
-        public string Get(string symbol)
-        {
-            return "Hello from Bot WebHooks!!!";
-        }
+        public string Get(string symbol) => "Hello from Bot WebHooks!!!";
 
         [HttpPost]
-        public void Post([FromBody]Spot signal)
+        public void Post([FromBody] Signal signal)
         {
-            // var position = new Spot(Db);
-
-            // var query = new Signal(Db, _signalLogger);
-            // var statement = await query.GetDataFromDBAsync(signal.Symbol);
-            
-            // if(statement != null)
-            //     await query.UpdateDB(signal.Symbol, signal.Level);
-            
-            // // Open position ONLY if 3 of BUY or SELL indicators signals
-            // // FIXME: Use only one variable to measure level of signal
-            // if(statement.BuySignalLevel1 == 1 && statement.BuySignalLevel2 == 1 && statement.BuySignalLevel3 == 1)
+            // if(signal.Direction == 0)
             // {
-            //     bool positionIsOpen = await position.OpenSpotPosition(signal);
-            //     if(positionIsOpen)
+            //     var result = _signal.GetSignal(signal.Symbol, signal.Direction);
+            //     if(result == null)
             //     {
-            //         await query.UpdateDB(signal.Symbol);
-            //         TelegramMessenger.SendMessage($"Success: {signal.Symbol} has been bought");
+            //         signal.IsActive = 1;
+            //         int signalId = _signal.InsertSignal(signal).Result;
+            //         int tradeId = _trade.InsertTrade(signal, signalId).Result;
             //     }
-            //     else
-            //         TelegramMessenger.SendMessage($"Error: failed to buy {signal.Symbol}");
-            // } 
-            // // FIXME: Use only one variable to measure level of signal
-            // if(statement.SellSignalLevel1 == 1 && statement.SellSignalLevel2 == 1 && statement.SellSignalLevel3 == 1)
+            // }
+            // else
             // {
-            //     bool positionIsOpen = await position.OpenSpotPosition(signal);
-            //     if(positionIsOpen)
+            //     var result = _signal.GetSignal(signal.Symbol, signal.Direction);
+            //     if(result == null)
             //     {
-            //         await query.UpdateDB(signal.Symbol);
-            //         TelegramMessenger.SendMessage($"Success: {signal.Symbol} has been sold");
+            //         signal.IsActive = 1;
+            //         int signalId = _signal.InsertSignal(signal).Result;
+                    
             //     }
-            //     else
-            //         TelegramMessenger.SendMessage($"Error: failed to sell {signal.Symbol}");
             // }
         }
     }
