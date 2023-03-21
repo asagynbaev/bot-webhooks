@@ -9,5 +9,8 @@ namespace bot_webhooks.Data
         Task<int> InsertTrade(Signal signal, int signalId);
         Trade GetTrade(string symbol, int direction);
         Trade UpdateTrade(int ID);
+
+        Task BinanceAccountInfo();
+        Task BinanceFutureOrder();
     }
 }
