@@ -15,10 +15,10 @@ namespace bot_webhooks
             BinanceClient.SetDefaultOptions(new Binance.Net.Objects.BinanceClientOptions()
             {
                 ApiCredentials = new ApiCredentials(
-                    Environment.GetEnvironmentVariable("API_KEY"), 
-                    Environment.GetEnvironmentVariable("API_SECRET")
+                    "",
+                    ""
                 )
-            });          
+            });
             CreateHostBuilder(args).Build().Run();
         }
 

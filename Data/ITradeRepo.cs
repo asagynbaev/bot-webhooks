@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Binance.Net.Objects.Futures.FuturesData;
 using bot_webhooks.Models;
 
 namespace bot_webhooks.Data
@@ -10,7 +11,7 @@ namespace bot_webhooks.Data
         Trade GetTrade(string symbol, int direction);
         Trade UpdateTrade(int ID);
 
-        Task BinanceAccountInfo();
-        Task BinanceFutureOrder();
+        Task<BinanceFutureAccountInfo> BinanceAccountInfo();
+        Task<BinanceFuturesPlacedOrder> BinanceFutureOrder();
     }
 }

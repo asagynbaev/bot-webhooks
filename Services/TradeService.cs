@@ -4,9 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Binance.Net;
 using Binance.Net.Enums;
+using Binance.Net.Interfaces;
+using Binance.Net.Objects.Futures.FuturesData;
 using bot_webhooks.Data;
 using bot_webhooks.Helpers;
 using bot_webhooks.Models;
+using CryptoExchange.Net.Sockets;
+using Newtonsoft.Json;
 using RestSharp;
 
 namespace bot_webhooks.Services
@@ -14,72 +18,41 @@ namespace bot_webhooks.Services
     public class TradeService : ITradeRepo
     {
         private readonly WebHookContext _db;
+        private IBinanceSocketClient _socketClient;
+        private UpdateSubscription _subscription;
+        private IBinanceClient _client;
 
-        public TradeService(WebHookContext db) => (_db) = (db);
-
-        public Task BinanceAccountInfo()
+        public TradeService(WebHookContext db, IBinanceSocketClient socketClient, IBinanceClient client)
         {
-            // Установить API-ключ и секретный ключ Binance
-            string apiKey = "Ваш API-ключ";
-            string apiSecret = "Ваш секретный ключ";
-
-            // Создать клиент RestSharp и задать базовый URL API Binance
-            var client = new RestClient("https://api.binance.com");
-
-            // Создать запрос для получения информации об аккаунте
-            var request = new RestRequest("/api/v3/account", Method.Get);
-
-            // Добавить параметры запроса
-            request.AddParameter("timestamp", GetTimestamp());
-            request.AddParameter("recvWindow", "5000");
-            request.AddParameter("signature", GetSignature(apiSecret, request.Parameters));
-
-            // Добавить заголовок с API-ключом Binance
-            request.AddHeader("X-MBX-APIKEY", apiKey);
-
-            // Выполнить запрос и получить ответ
-            var response = client.Execute(request);
-
-            // Вывести ответ на консоль
-            Console.WriteLine(response.Content);
-
-            return null;
+            _db = db;
+            _socketClient = socketClient;
+            _client = client;
         }
 
-        public Task BinanceFutureOrder()
+        public async Task<BinanceFutureAccountInfo> BinanceAccountInfo()
         {
-            // Установить API-ключ и секретный ключ Binance
-            string apiKey = "Ваш API-ключ";
-            string apiSecret = "Ваш секретный ключ";
+            var response = await _client.FuturesUsdt.Account.GetAccountInfoAsync();
+            var binanceFuture = JsonConvert.SerializeObject(response.Data);
+            BinanceFutureAccountInfo resultInfo = JsonConvert.DeserializeObject<BinanceFutureAccountInfo>(binanceFuture);
+            //await _db.BinanceFutureAccountInfos.AddAsync(resultInfo);
+            //await _db.SaveChangesAsync();
+            return resultInfo;
+        }
 
-            // Создать клиент RestSharp и задать базовый URL API Binance
-            var client = new RestClient("https://fapi.binance.com");
-
-            // Создать запрос для размещения ордера на продажу
-            var request = new RestRequest("/fapi/v1/order", Method.Post);
-
-            // Добавить параметры запроса для размещения ордера на продажу
-            request.AddParameter("symbol", "BTCUSDT"); // Пара торгов
-            request.AddParameter("side", "SELL"); // Направление ордера на продажу
-            request.AddParameter("type", "LIMIT"); // Тип ордера - лимитный
-            request.AddParameter("timeInForce", "GTC"); // Срок действия ордера - действует до отмены
-            request.AddParameter("quantity", "0.001"); // Количество криптовалюты для продажи
-            request.AddParameter("price", "60000"); // Цена продажи
-
-            // Добавить заголовок с API-ключом Binance
-            request.AddHeader("X-MBX-APIKEY", apiKey);
-
-            // Добавить параметры запроса для подписи секретным ключом
-            request.AddParameter("timestamp", GetTimestamp());
-            request.AddParameter("recvWindow", "5000");
-            request.AddParameter("signature", GetSignature(apiSecret, request.Parameters));
-
-            // Выполнить запрос и получить ответ
-            var response = client.Execute(request);
-
-            // Вывести ответ на консоль
-            Console.WriteLine(response.Content);
-            return null;
+        public async Task<BinanceFuturesPlacedOrder> BinanceFutureOrder()
+        {
+            var trade = await _client.FuturesUsdt.Order.PlaceOrderAsync(
+                                  symbol: "BTCUSDT",
+                                  side: OrderSide.Buy,
+                                  type: OrderType.Limit,
+                                  quantity: 1,
+                                  price: 0.002m,
+                                  orderResponseType: OrderResponseType.Result,
+                                  positionSide: PositionSide.Long,
+                                  workingType: WorkingType.Mark,
+                                  timeInForce: TimeInForce.GoodTillCancel);
+            var result = trade.Data;
+            return result;
         }
 
         // Метод для получения временной метки в миллисекундах

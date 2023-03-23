@@ -9,6 +9,9 @@ using Microsoft.OpenApi.Models;
 using bot_webhooks.Data;
 using bot_webhooks.Models;
 using bot_webhooks.Services;
+using Microsoft.Extensions.Options;
+using Binance.Net.Interfaces;
+using Binance.Net;
 
 namespace bot_webhooks
 {
@@ -24,11 +27,18 @@ namespace bot_webhooks
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<WebHookContext>(o => o.UseMySQL(Environment.GetEnvironmentVariable("DB_CONNECTION")));
+            var optionsBuilder = new DbContextOptionsBuilder<WebHookContext>();
+            optionsBuilder.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"));
+            services.AddDbContext<WebHookContext>(options =>
+                options.UseNpgsql(
+                    Configuration.GetConnectionString("DefaultConnection")));
             services.AddScoped<IUserRepo, UserService>();
             services.AddScoped<ISignalRepo, SignalService>();
             services.AddScoped<ITradeRepo, TradeService>();
             services.AddControllers();
+            services.AddSingleton<IBinanceSocketClient, BinanceSocketClient>();
+            services.AddTransient<IBinanceClient, BinanceClient>();
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "bot_webhooks", Version = "v1" });
