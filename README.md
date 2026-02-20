@@ -1,8 +1,101 @@
 # bot-webhooks
-This repository contains the code of the web-api restful API service, which provides the possibility of automatic trading, it works in conjunction with Tradingview signals, and automatically deploys to heroku after each push to repo.
 
-1) git clone this repo
-2) add .env file (TELEGRAM_BOT_ID, TELEGRAM_CHANNEL_ID)
-3) dotnet restore
-4) dotnet run
-5) send GET requvest via browser https://localhost:5001/webhookreceiver?symbol=CRVUSDT
+REST API service for automated execution of trading signals. Consumes webhooks (e.g. TradingView), executes spot and futures logic on Binance and exposes account data for Binance and Bybit. Notifications are sent via Telegram.
+
+**Stack:** .NET 8, ASP.NET Core, Entity Framework Core 8, PostgreSQL, Binance.Net 12, Bybit.Net 6.
+
+---
+
+## Requirements
+
+- .NET 8 SDK  
+- PostgreSQL (for signals, trades, users)  
+- Binance API keys (spot and USDT-M futures)  
+- Optional: Bybit API keys (unified account), Telegram bot token and chat/channel ID  
+
+---
+
+## Configuration
+
+Configuration is read from `appsettings.json` and from environment variables loaded from a `.env` file in the project root (via DotNetEnv). Create `.env` before running.
+
+### Environment variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `BINANCE_API_KEY` | Yes | Binance API key (spot and USDT-M) |
+| `BINANCE_SECRET` | Yes | Binance API secret |
+| `BYBIT_API_KEY` | No | Bybit API key (unified account). Omit to disable Bybit endpoints. |
+| `BYBIT_SECRET` | No | Bybit API secret |
+| `TELEGRAM_BOT_ID` | No | Telegram bot token for notifications |
+| `TELEGRAM_CHANNEL_ID` | No | Telegram chat/channel ID for notifications |
+
+### Database
+
+Set the connection string in `appsettings.json` under `ConnectionStrings:DefaultConnection` (PostgreSQL). Example:
+
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Host=127.0.0.1;Port=5432;Database=BotTrader;Username=postgres;Password=your_password;"
+}
+```
+
+Apply migrations:
+
+```bash
+dotnet ef database update
+```
+
+---
+
+## Build and run
+
+```bash
+git clone <repository-url>
+cd bot-webhooks
+cp .env.example .env   # if present; otherwise create .env with the variables above
+dotnet restore
+dotnet run
+```
+
+By default the API listens on the URLs configured in `Properties/launchSettings.json` (e.g. `https://localhost:5001`, `http://localhost:5000`). In Development, Swagger UI is available at `/swagger`.
+
+---
+
+## API
+
+Base route for the webhook receiver: `/WebHookReceiver`.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/WebHookReceiver/Info` | Binance USDT-M futures account summary (margins, balances, permissions). |
+| GET | `/WebHookReceiver/BybitInfo` | Bybit V5 unified account wallet balance (equity, wallet balance, available balance, margins). Returns 404 if Bybit credentials are not set or the request fails. |
+
+Responses are JSON. All relevant endpoints support `CancellationToken` (e.g. for client disconnect and timeouts).
+
+---
+
+## Project layout
+
+- **Controllers** — HTTP endpoints (webhook receiver, Binance/Bybit info).  
+- **Services** — Trading and exchange logic: `TradeService` (Binance spot/futures, DB persistence), `BinanceBalanceProvider`, `BybitAccountService`, `SignalService`, `UserService`.  
+- **Data** — EF Core `WebHookContext`, repository interfaces and entities (signals, trades, users, Binance account snapshot).  
+- **Models** — DTOs and entities (e.g. `BinanceFutureAccountInfo`, `BybitAccountInfo`, `Signal`, `Trade`).  
+- **Helpers** — Utilities (e.g. `TelegramMessenger`, `Futures` helper).  
+- **Migrations** — EF Core migrations for PostgreSQL.  
+
+---
+
+## Deployment
+
+The application is a standard ASP.NET Core 8 web app. Deploy to any host that supports .NET 8 (IIS, Linux with Kestrel, Docker, Heroku with .NET buildpack, etc.). Ensure:
+
+- `ASPNETCORE_ENVIRONMENT` is set appropriately (e.g. `Production`).  
+- All required environment variables (Binance keys, DB connection string, optional Bybit/Telegram) are set in the hosting environment; do not rely on a `.env` file in production unless your deployment explicitly loads it.  
+- PostgreSQL is reachable and migrations have been applied.  
+
+---
+
+## License
+
+See repository license file.

@@ -1,96 +1,33 @@
-using Binance.Net;
 using Binance.Net.Enums;
+using Binance.Net.Interfaces.Clients;
 using bot_webhooks.Data;
-using bot_webhooks.Helpers;
-using CryptoExchange.Net.Authentication;
-using Microsoft.EntityFrameworkCore;
 using bot_webhooks.Models;
+using Microsoft.EntityFrameworkCore;
 
-namespace bot_webhooks.Services
+namespace bot_webhooks.Helpers;
+
+public class Futures(WebHookContext db, IBinanceRestClient binanceClient)
 {
-    class Futures
-    {
-        private readonly WebHookContext _db;
-        public Futures()
-        {
-        }
+	private readonly WebHookContext _db = db;
+	private readonly IBinanceRestClient _binanceClient = binanceClient;
+	private decimal Balance { get; set; }
+	private decimal TokensAmount { get; set; }
 
-        public Futures(WebHookContext db)
-        {
-            _db = db;
-        }
-        
-        private decimal Balance { get; set; }
-        private decimal TokensAmount { get; set; }
-        
-        public async void OpenPosition(Signal signal)
-        {
-            // FIXME: if user active, and Futures only
-            var allUsers = await _db.Users.ToListAsync();
+	public async Task OpenPositionAsync(Signal signal)
+	{
+		_ = await _db.Users.ToListAsync();
+		// TODO: Implement method to check open positions
+		// TODO: Implement method to close position
+		// TODO: finish USDT-M positions functionality
+	}
 
-            // TODO: Implement method to check open positions
-            // CheckOpenPosition();
-
-            // TODO: Implement method to close position
-            // ClosePosition();
-
-            // TODO: finish USDT-M positions functionality
-
-            // TODO: foreach(var item in allUsers)
-            decimal futuresBalance = 0;
-            // using (var client = new BinanceClient())
-            // {
-            //     var getFuturesBalance = await client.FuturesUsdt.Account.GetBalanceAsync();
-            //     foreach (var item in getFuturesBalance.Data)
-            //     {
-            //         if(item.Asset == "USDT")
-            //             //TODO: Need to think about amount for trade, now it's getting half of deposit
-            //             futuresBalance = item.AvailableBalance / 2;
-            //     }
-            //     var getSymbolPrice = await client.Spot.Market.GetPriceAsync(signal.Symbol);
-            //     var symbolPrice = getSymbolPrice.Data.Price;
-            //     // TODO: 10X leverage used, should be flexible
-            //     var quantity = (futuresBalance / symbolPrice) * 10;
-                
-            //     // FIXME: Need to get symbol precission from binance exchache (0.001m)
-            //     // TODO: Get ticksize from signal
-            //     quantity = Math.Round(Math.Abs(quantity), Convert.ToInt32(0.001m));
-
-            //     var result = await client.FuturesUsdt.Order.PlaceOrderAsync(
-            //         signal.Symbol, 
-            //         OrderSide.Buy, 
-            //         OrderType.Market, 
-            //         quantity, //decimal? quantity, 
-            //         signal.Direction == 0 ? PositionSide.Long : PositionSide.Short, 
-            //         null, null, null, null, null, null, null,null, null, null, null, null, default
-            //     );
-
-            //     if(!result.Success)
-            //     {
-            //         return true;
-            //     }
-            //     else
-            //     {
-            //         // TODO: log error message
-            //         TelegramMessenger.SendMessage($"Error: {result.Error.Message}");
-            //         return false;
-            //     } 
-            // }
-        }
-
-        public async void ClosePosition(Signal signal)
-        {
-            using (var client = new BinanceClient())
-            {
-                var result = await client.Spot.Order.PlaceOrderAsync(
-                    signal.Symbol, 
-                    OrderSide.Sell,
-                    OrderType.Market, 
-                    TokensAmount == 0 ? null : TokensAmount, // SymbolAmount
-                    Balance == 0 ? null : Balance, // quoteSymbolAmount
-                    null, null, null, null, null, null, null, default // Unnecessary parameters
-                );
-            }
-        }
-    }
+	public async Task ClosePositionAsync(Signal signal)
+	{
+		_ = await _binanceClient.SpotApi.Trading.PlaceOrderAsync(
+			signal.Symbol!,
+			OrderSide.Sell,
+			SpotOrderType.Market,
+			quantity: TokensAmount == 0 ? null : TokensAmount,
+			quoteQuantity: Balance == 0 ? null : Balance);
+	}
 }

@@ -1,20 +1,17 @@
-using System;
-using System.Net.Http;
-using System.Threading.Tasks;
+namespace bot_webhooks.Helpers;
 
-namespace bot_webhooks.Helpers
+public static class TelegramMessenger
 {
-    public static class TelegramMessenger
-    {
-        private static readonly string token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_ID");
-        private static readonly string channel = Environment.GetEnvironmentVariable("TELEGRAM_CHANNEL_ID");
+	private static readonly string? Token = Environment.GetEnvironmentVariable("TELEGRAM_BOT_ID");
+	private static readonly string? Channel = Environment.GetEnvironmentVariable("TELEGRAM_CHANNEL_ID");
 
-        public async static Task<HttpResponseMessage> SendMessage(string message)
-        {
-            using (var httpClient = new HttpClient())
-            {
-                return await httpClient.GetAsync($"https://api.telegram.org/{token}/sendMessage?chat_id={channel}&text={message}");
-            }
-        }
-    }
+	public static async Task<HttpResponseMessage> SendMessage(string message)
+	{
+		if (string.IsNullOrEmpty(Token) || string.IsNullOrEmpty(Channel))
+			return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+
+		using var httpClient = new HttpClient();
+		var url = $"https://api.telegram.org/{Token}/sendMessage?chat_id={Channel}&text={Uri.EscapeDataString(message)}";
+		return await httpClient.GetAsync(url);
+	}
 }
