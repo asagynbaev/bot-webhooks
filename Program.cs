@@ -38,6 +38,8 @@ builder.Services.AddSingleton<IBinanceBalanceProvider, BinanceBalanceProvider>()
 builder.Services.AddSingleton<IBinanceRestClient, BinanceRestClient>();
 builder.Services.AddSingleton<IBybitRestClient, BybitRestClient>();
 builder.Services.AddSingleton<IBybitAccountService, BybitAccountService>();
+builder.Services.AddSingleton<ITelegramChannelMessageStore, TelegramChannelMessageStore>();
+builder.Services.AddHostedService<TelegramChannelListenerService>();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen(c =>
 {
